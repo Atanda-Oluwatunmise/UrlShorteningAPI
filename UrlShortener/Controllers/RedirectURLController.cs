@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Azure;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace UrlShortener.Controllers
@@ -15,7 +16,7 @@ namespace UrlShortener.Controllers
 
 
         [HttpGet("{code}")]
-        public IActionResult RedirectToUrl(string code)
+        public IActionResult RedirectToUrl([FromRoute] string code)
         {
             // Retrieve the original URL based on the provided code
             var shortenedUrl = _context.ShortenedUrls.FirstOrDefault(u => u.UniqueCode == code);
@@ -24,9 +25,23 @@ namespace UrlShortener.Controllers
             {
                 return NotFound();
             }
-
-            // Perform the redirection
             return RedirectPermanent(shortenedUrl.LongUrl);
+
         }
+
+        private string redirectroute(string url)
+        {
+            string result = string.Empty;
+            using (var client = new HttpClient())
+            {
+                var response = client.GetAsync(url).Result;
+                if (response.IsSuccessStatusCode)
+                {
+                    result = response.Headers.Location.ToString();
+                }
+            }
+            return result;
+        }
+        
     }
 }

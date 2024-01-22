@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using UrlShortener.Entites;
 using UrlShortener.Models;
 using UrlShortener.Services;
@@ -26,6 +27,10 @@ namespace UrlShortener.Controllers
             if(!Uri.TryCreate(shortenUrlRequest.Url, UriKind.Absolute, out _))
             {
                 return Results.BadRequest("The specified Url is invalid");
+            }
+            var url = await _dbContext.ShortenedUrls.Where(x => x.LongUrl == shortenUrlRequest.Url).FirstOrDefaultAsync();
+            if (url != null){
+                return Results.Ok(url.ShortUrl);
             }
 
             var code = await _urlShorteningService.GenerateUniqueCode();
